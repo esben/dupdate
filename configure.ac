@@ -17,8 +17,8 @@
 # along with dupdate.  If not, see <http://www.gnu.org/licenses/>.
 
 AC_PREREQ([2.64])
-AC_INIT([dscan], esyscmd([./version.sh]), [eha@doredevelopment.dk])
-AC_CONFIG_SRCDIR([src/dboot.c])
+AC_INIT([dupdate], esyscmd([./version.sh]), [esben.haabendal@prevas.dk])
+AC_CONFIG_SRCDIR([src/])
 AC_CONFIG_HEADERS([config.h])
 AC_CANONICAL_SYSTEM
 AC_USE_SYSTEM_EXTENSIONS
@@ -27,31 +27,25 @@ AC_USE_SYSTEM_EXTENSIONS
 AM_INIT_AUTOMAKE
 
 # Build options
-AC_ARG_WITH(backend,
-  AS_HELP_STRING([--with-backend=mtd|nvram],
-    [choose if dboot status should be stored in mtd (NOR) or NVRAM]))
-AM_CONDITIONAL(MTD, test x$with_backend = xmtd)
-AM_CONDITIONAL(NVRAM, test x$with_backend = xnvram)
 
 # Checks for programs.
-AC_PROG_AWK
 AC_PROG_CC
 
 # Checks for libraries.
 
 # Checks for header files.
-AC_CHECK_HEADERS([fcntl.h limits.h stdint.h stdlib.h string.h sys/ioctl.h sys/mount.h syslog.h unistd.h])
+AC_CHECK_HEADERS([fcntl.h limits.h sys/param.h syslog.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_PID_T
+AC_TYPE_SIZE_T
 AC_TYPE_SSIZE_T
-AC_TYPE_UINT16_T
 
 # Checks for library functions.
 AC_FUNC_FORK
-AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
-AC_CHECK_FUNCS([getcwd realpath strerror strstr])
+AC_FUNC_MALLOC
+AC_FUNC_STRNLEN
+AC_CHECK_FUNCS([strdup strerror strtoul])
 
-AC_CONFIG_FILES([Makefile
-		 src/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT

@@ -1,10 +1,10 @@
 #!/bin/sh
 DAEMON=/usr/sbin/dupdate
 NAME=dupdate
-DESC="Update daemon"
+DESC="Firmware update daemon"
 DIR="/tmp/fwupdates"
-FILE="run_update.sh"
-ARGS="--dir $DIR --file $FILE --daemon"
+EXEFILE="run"
+ARGS="$DIR -x $EXEFILE -l"
 
 test -f $DAEMON || exit 0
 

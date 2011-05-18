@@ -1,4 +1,4 @@
-/sh
+#!/bin/sh
 
 if [ "$1" != "--" ]; then
     exec $0 -- | logger -s -t $0
