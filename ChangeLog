@@ -1,3 +1,9 @@
+2011-09-12  Esben Haabendal  <eha@dev.doredevelopment.dk>
+
+	* src/dboot.c: Remove copyright notice in dboot -h output.
+	* Copyright comments changed to Prevas A/S.
+	* 1.0.1 Release
+
 2010-09-07  Esben Haabendal  <eha@fire.doredevelopment.dk>
 
 	* 1.0.0 First release
