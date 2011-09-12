@@ -118,8 +118,7 @@ static const char usage[] = "Usage: dboot [OPTION]...\n"
 "  -L, --list-os[=IMAGE]\n"
 "                         display os image versions\n"
 "\nOther options:\n"
-"  -h, --help             display this help message and exit\n"
-"\nCopyright 2010 DoreDevelopment ApS\n";
+"  -h, --help             display this help message and exit\n";
 
 static struct option getopt_longopts[] = {
 	{"bl",			no_argument,		0, 'b'},
