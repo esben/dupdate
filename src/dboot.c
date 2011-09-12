@@ -1,7 +1,7 @@
 /*
  * Command for getting boot flags.
  *
- * Copyright (C) 2010 DoréDevelopment ApS
+ * Copyright (C) 2010-2011 Prevas A/S
  *
  * Author: Morten Thunberg Svendsen <mts@doredevelopment.dk>
  *

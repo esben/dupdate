@@ -1,7 +1,7 @@
 /*
  * Support for displaying firmware information managed by dboot
  *
- * Copyright (C) 2010 DoréDevelopment ApS
+ * Copyright (C) 2010-2011 Prevas A/S
  *
  * Author: Esben Haabendal <eha@doredevelopment.dk>
  *
