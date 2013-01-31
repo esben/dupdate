@@ -24,11 +24,12 @@
 #include "config.h"
 
 struct dupdate_config {
-	char *watchdir;		/* Watched directory */
-	char *unpackdir;		/* Watched directory */
-	char *exefile;		/* Command to execute */
+	char *watchdir;		/* Directory to watch for incoming archives */
+	char *unpackdir;	/* Directory to unpack archvies to */
+	char *tarcmd;		/* Command to execute in tar archives */
+	char *zipcmd;		/* Command to execute in zip archives*/
 	char *pidfile;		/* PID file (daemon mode only) */
-	int flags;			/* Configuration flags */
+	int flags;		/* Configuration flags */
 };
 
 #define DUPDATE_FLAG_FOREGROUND		(1 << 0)
@@ -38,7 +39,7 @@ struct dupdate_config {
 #define DUPDATE_FLAG_NO_CLEANUP		(1 << 4)
 
 #define DEFAULT_PIDFILE			"/var/run/dupdate.pid"
-#define DEFAULT_EXEFILE			"run"
+#define DEFAULT_CMDFILE			"run"
 
 extern struct dupdate_config cfg;
 

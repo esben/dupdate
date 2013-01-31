@@ -31,8 +31,9 @@ static const char *usage = \
 	"Arguments:\n"							\
 	"  <dir>                 Directory to watch\n\n"		\
 	"Options:\n"							\
-	"  -x, --exefile=<file>  Name of file in archive to execute\n"	\
 	"  -u, --unpack=<dir>    Directory to unpack archive in\n"	\
+	"  -x, --tarcmd=<file>   Name of file in tar archives to execute [default: run]\n" \
+	"  -z, --zipcmd=<file>   Name of file in zip archives to execute [default: run]\n" \
 	"  -p, --pidfile=<path>  File to write daemon PID to\n"		\
 	"  -f, --foreground      Run in the foreground\n"		\
 	"  -F, --detach          Run in the foreground but detach the process from the \n" \
@@ -44,8 +45,9 @@ static const char *usage = \
 	;
 
 static struct option longopts[] = {
-	{"exefile",	required_argument,	0, 'x'},
 	{"unpack",	required_argument,	0, 'u'},
+	{"tarcmd",	required_argument,	0, 'x'},
+	{"zipcmd",	required_argument,	0, 'z'},
 	{"pidfile",	required_argument,	0, 'p'},
 	{"foreground",	no_argument,		0, 'f'},
 	{"detach",	no_argument,		0, 'F'},
@@ -55,7 +57,7 @@ static struct option longopts[] = {
 	{"help",	no_argument,		0, 'h'},
 	{0, 0, 0, 0}
 };
-static const char *optstring = "x:u:p:fFlRCh";
+static const char *optstring = "u:x:z:p:fFlRCh";
 
 static void
 printf_usage(char *cmd)
@@ -93,14 +95,20 @@ parse_args(int argc, char *argv[])
 
 		switch (opt) {
 
-		case 'x':
-			err = strset(&cfg.exefile, optarg, NAME_MAX);
+		case 'u':
+			err = strset(&cfg.unpackdir, optarg, PATH_MAX - 7);
 			if (err)
 				PERROR("strset", err);
 			break;
 
-		case 'u':
-			err = strset(&cfg.unpackdir, optarg, PATH_MAX - 7);
+		case 'x':
+			err = strset(&cfg.tarcmd, optarg, NAME_MAX);
+			if (err)
+				PERROR("strset", err);
+			break;
+
+		case 'z':
+			err = strset(&cfg.zipcmd, optarg, NAME_MAX);
 			if (err)
 				PERROR("strset", err);
 			break;
@@ -175,7 +183,8 @@ parse_args(int argc, char *argv[])
 
 	if (!cfg.pidfile)
 		cfg.pidfile = DEFAULT_PIDFILE;
-
-	if (!cfg.exefile)
-		cfg.exefile = DEFAULT_EXEFILE;
+	if (!cfg.tarcmd)
+		cfg.tarcmd = DEFAULT_CMDFILE;
+	if (!cfg.zipcmd)
+		cfg.zipcmd = DEFAULT_CMDFILE;
 }

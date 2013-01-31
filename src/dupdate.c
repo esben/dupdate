@@ -33,7 +33,6 @@
 struct dupdate_config cfg;
 
 static char *tmpdir_template;
-static char *tmpdir;
 static char *shcmd;
 static int shcmd_len;
 
@@ -70,13 +69,21 @@ static int
 remove_archive(const char *path)
 {
 	int err;
+	struct stat st;
 
 	if (cfg.flags & DUPDATE_FLAG_NO_REMOVE)
-		return;
+		return 0;
 
 	err = chdir(cfg.watchdir);
 	if (err == -1) {
 		PERROR("chdir", errno);
+		return errno;
+	}
+
+	if (stat(path, &st) == -1) {
+		if (errno == ENOENT)
+			return 0;
+		PERROR("stat", errno);
 		return errno;
 	}
 
@@ -89,13 +96,34 @@ remove_archive(const char *path)
 	return 0;
 }
 
+static char *
+new_tmpdir(void)
+{
+	char *tmpdir;
+
+	tmpdir = strdup(tmpdir_template);
+	if (!tmpdir) {
+		PERROR("strdup", errno);
+		return NULL;
+	}
+
+	strcpy(tmpdir, tmpdir_template);
+	if (!mkdtemp(tmpdir)) {
+		PERROR("mkdtemp", errno);
+		free(tmpdir);
+		return NULL;
+	}
+
+	return tmpdir;
+}
+
 static int
-cleanup_tmpdir(const char *path)
+destroy_tmpdir(const char *tmpdir)
 {
 	int err;
 
 	if (cfg.flags & DUPDATE_FLAG_NO_CLEANUP)
-		return;
+		return 0;
 
 	err = chdir(cfg.watchdir);
 	if (err == -1) {
@@ -103,7 +131,7 @@ cleanup_tmpdir(const char *path)
 		return errno;
 	}
 
-	snprintf(shcmd, shcmd_len, "rm -rf %s", path);
+	snprintf(shcmd, shcmd_len, "rm -rf %s", tmpdir);
 	INFO("running: %s", shcmd);
 	err = system(shcmd);
 	if (err == -1) {
@@ -114,70 +142,146 @@ cleanup_tmpdir(const char *path)
 	return 0;
 }
 
-static void
-handle_inotify_event(struct inotify_event *event)
+static int
+process_zip_archive(const char *name)
 {
 	int err;
-	char *exefile;
+	char *tmpdir;
 
-	if (event->len == 0) {
-		ERROR("ignoring anonymous event");
-		return;
+	tmpdir = new_tmpdir();
+	if (!tmpdir) {
+		ERROR("tmpdir creation failed");
+		return 1;
 	}
 
-	strcpy(tmpdir, tmpdir_template);
-	if (!mkdtemp(tmpdir)) {
-		PERROR("mkdtemp", errno);
-		return;
-	}
-
-	exefile = malloc(strnlen(tmpdir, PATH_MAX) + 2 +
-			 strnlen(cfg.exefile, NAME_MAX));
-	if (!exefile) {
-		PERROR("malloc", ENOMEM);
-		cleanup_tmpdir(tmpdir);
-		return;
-	}
-	strcpy(exefile, tmpdir);
-	strcat(exefile, "/");
-	strcat(exefile, cfg.exefile);
-
-	INFO("using tmpdir %s", tmpdir);
+	INFO("processing zip archive in %s", tmpdir);
 	err = chdir(tmpdir);
 	if (err == -1) {
 		PERROR("chdir", errno);
-		cleanup_tmpdir(tmpdir);
-		return;
+		goto out;
 	}
 
-	snprintf(shcmd, shcmd_len, "tar -xf %s/%s", cfg.watchdir, event->name);
+	snprintf(shcmd, shcmd_len, "unzip -q %s/%s %s",
+		 cfg.watchdir, name, cfg.zipcmd);
 	INFO("running: %s", shcmd);
 	err = system(shcmd);
 	if (err == -1) {
 		PERROR(shcmd, errno);
-		cleanup_tmpdir(tmpdir);
-		remove_archive(event->name);
-		return;
+		goto out;
 	} else if (err) {
-		PERROR(shcmd, WEXITSTATUS(err));
-		cleanup_tmpdir(tmpdir);
-		remove_archive(event->name);
-		return;
+		ERROR("%s: exit status: %d", shcmd, WEXITSTATUS(err));
+		goto out;
 	}
 
-	INFO("running: %s", exefile);
-	err = system(exefile);
+	err = chmod(cfg.zipcmd, S_IRUSR|S_IXUSR|S_IXGRP|S_IXOTH);
 	if (err == -1) {
-		PERROR(shcmd, WEXITSTATUS(err));
-		cleanup_tmpdir(tmpdir);
-		return;
+		PERROR("chmod", errno);
+		goto out;
 	}
 
-	remove_archive(event->name);
+	snprintf(shcmd, shcmd_len, "./%s %s/%s",
+		 cfg.zipcmd, cfg.watchdir, name);
+	INFO("running: %s", shcmd);
+	err = system(shcmd);
+	if (err == -1) {
+		PERROR(shcmd, errno);
+		goto out;
+	} else if (err) {
+		ERROR("%s: exit status: %d", shcmd, WEXITSTATUS(err));
+		goto out;
+	}
 
-	INFO("%s/%s done", cfg.watchdir, event->name);
+out:
+	destroy_tmpdir(tmpdir);
+	free(tmpdir);
+	return err ? 1 : 0;
+}
 
-	cleanup_tmpdir(tmpdir);
+static int
+process_tar_archive(const char *name)
+{
+	int err;
+	char *tmpdir;
+
+	tmpdir = new_tmpdir();
+	if (!tmpdir) {
+		ERROR("tmpdir creation failed");
+		return 1;
+	}
+
+	INFO("processing tar archive in %s", tmpdir);
+	err = chdir(tmpdir);
+	if (err == -1) {
+		PERROR("chdir", errno);
+		goto out;
+	}
+
+	snprintf(shcmd, shcmd_len, "tar -xf %s/%s", cfg.watchdir, name);
+	INFO("running: %s", shcmd);
+	err = system(shcmd);
+	if (err == -1) {
+		PERROR(shcmd, errno);
+		goto out;
+	} else if (err) {
+		ERROR("%s: exit status: %d", shcmd, WEXITSTATUS(err));
+		goto out;
+	}
+
+	remove_archive(name);
+
+	err = chdir(tmpdir);
+	if (err == -1) {
+		PERROR("chdir", errno);
+		goto out;
+	}
+
+	snprintf(shcmd, shcmd_len, "./%s", cfg.tarcmd);
+	INFO("running: %s", shcmd);
+	err = system(shcmd);
+	if (err == -1) {
+		PERROR(shcmd, errno);
+		goto out;
+	} else if (err) {
+		ERROR("%s: exit status: %d", shcmd, WEXITSTATUS(err));
+		goto out;
+	}
+
+out:
+	destroy_tmpdir(tmpdir);
+	free(tmpdir);
+	return err ? 1 : 0;
+}
+
+static int
+process_archive(const char *name)
+{
+	int fd, ret;
+	char buf[4];
+
+	fd = open(name, O_RDONLY);
+	if (fd == -1) {
+		PERROR("open", errno);
+		return 1;
+	}
+
+	ret = read(fd, buf, sizeof(buf));
+	if (ret != sizeof(buf)) {
+		if (ret == -1)
+			PERROR("read", errno);
+		else
+			ERROR("partial archive head read: %d", ret);
+		if (close(fd) == -1)
+			PERROR("close", errno);
+		return 1;
+	}
+
+	if (close(fd) == -1)
+		PERROR("close", errno);
+
+	if (buf[0]==0x50 && buf[1]==0x4b && buf[2]==0x03 && buf[3]==0x04)
+		return process_zip_archive(name);
+	else
+		return process_tar_archive(name);
 }
 
 static int
@@ -194,9 +298,8 @@ inotify_watch(void)
 	}
 
 	tmpdir_template = malloc(strlen(cfg.unpackdir) + 8);
-	tmpdir = malloc(strnlen(cfg.unpackdir, PATH_MAX));
 	shcmd = malloc(shcmd_len);
-	if (!tmpdir_template || !tmpdir || !shcmd) {
+	if (!tmpdir_template || !shcmd) {
 		PERROR("malloc", ENOMEM);
 		return ENOMEM;
 	}
@@ -229,14 +332,25 @@ inotify_watch(void)
 	event = (struct inotify_event *)event_buf;
 
 	while ((err = get_inotify_event(fd, event)) == 0) {
+		if (event->len == 0) {
+			ERROR("ignoring anonymous event");
+			return;
+		}
+
 		INFO("processing %s/%s", cfg.watchdir, event->name);
+
 		err = chdir(cfg.watchdir);
 		if (err == -1) {
 			PERROR("chdir", errno);
 			continue;
 		}
 
-		handle_inotify_event(event);
+		if (process_archive(event->name))
+			INFO("FAILURE: %s", event->name);
+		else
+			INFO("SUCCESS: %s", event->name);
+
+		remove_archive(event->name);
 	}
 
 	PERROR("get_inotify_event", err);
