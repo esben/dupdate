@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include <sys/inotify.h>
 #include <sys/param.h>
+#include <sys/wait.h>
 
 struct dupdate_config cfg;
 
