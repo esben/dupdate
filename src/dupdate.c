@@ -364,12 +364,14 @@ int main (int argc, char *argv[])
 
 	parse_args(argc, argv);
 
+#ifdef HAVE_FORK
 	if (!(cfg.flags & DUPDATE_FLAG_FOREGROUND))
 		daemonize();
 	if (cfg.flags & DUPDATE_FLAG_DETACH) {
 		ERROR("detach mode not implemented yet");
 		exit(EXIT_FAILURE);
 	}
+#endif /* HAVE_FORK */
 
 	err = inotify_watch();
 	if (err) {

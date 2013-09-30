@@ -26,6 +26,16 @@
 
 #include "dupdate.h"
 
+#ifdef HAVE_FORK
+#define HAVE_FORK_USAGE \
+	"  -p, --pidfile=<path>  File to write daemon PID to\n"		\
+	"  -f, --foreground      Run in the foreground\n"		\
+	"  -F, --detach          Run in the foreground but detach the process from the \n" \
+	"                        controlling terminal and current directory\n"
+#else /* HAVE_FORK */
+#define HAVE_FORK_USAGE ""
+#endif /* HAVE_FORK */
+
 static const char *usage = \
 	"Usage: %s <dir> [options]\n\n"					\
 	"Arguments:\n"							\
@@ -34,10 +44,7 @@ static const char *usage = \
 	"  -u, --unpack=<dir>    Directory to unpack archive in\n"	\
 	"  -x, --tarcmd=<file>   Name of file in tar archives to execute [default: run]\n" \
 	"  -z, --zipcmd=<file>   Name of file in zip archives to execute [default: run]\n" \
-	"  -p, --pidfile=<path>  File to write daemon PID to\n"		\
-	"  -f, --foreground      Run in the foreground\n"		\
-	"  -F, --detach          Run in the foreground but detach the process from the \n" \
-	"                        controlling terminal and current directory\n" \
+	HAVE_FORK_USAGE							\
 	"  -l, --syslog          Output syslog instead of stdout/stderr\n" \
 	"  -R, --no-remove       Don't remove archive after unpack\n"	\
 	"  -C, --no-cleanup      Don't remove unpacked files when done\n" \
@@ -113,6 +120,7 @@ parse_args(int argc, char *argv[])
 				PERROR("strset", err);
 			break;
 
+#ifdef HAVE_FORK
 		case 'p':
 			err = strset(&cfg.pidfile, optarg, PATH_MAX);
 			if (err)
@@ -127,6 +135,7 @@ parse_args(int argc, char *argv[])
 			cfg.flags |= (DUPDATE_FLAG_FOREGROUND |
 					  DUPDATE_FLAG_DETACH);
 			break;
+#endif /* HAVE_FORK */
 
 		case 'l':
 			cfg.flags |= DUPDATE_FLAG_SYSLOG;

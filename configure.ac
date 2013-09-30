@@ -47,5 +47,7 @@ AC_FUNC_MALLOC
 AC_FUNC_STRNLEN
 AC_CHECK_FUNCS([strdup strerror strtoul])
 
+AM_CONDITIONAL([DAEMON], [test "$ac_cv_func_fork" = yes])
+
 AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT
