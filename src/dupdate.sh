@@ -5,7 +5,7 @@ DESC="Firmware update daemon"
 DIR="/tmp/fwupdates"
 EXEFILE="run"
 ARGS="$DIR -x $EXEFILE -l"
-
+PIDFILE=/var/run/dupdate.pid
 test -f $DAEMON || exit 0
 
 set -e
@@ -15,12 +15,12 @@ case "$1" in
         echo -n "starting $DESC: $NAME... "
 	[ -d $DIR ] && rm -rf $DIR
 	mkdir -p $DIR
-	start-stop-daemon -S -n $NAME -a $DAEMON -- $ARGS
+	start-stop-daemon -S -m -p $PIDFILE -a $DAEMON -- $ARGS
 	echo "done."
 	;;
     stop)
         echo -n "stopping $DESC: $NAME... "
-	start-stop-daemon -K -n $NAME
+	start-stop-daemon -K -p $PIDFILE
 	echo "done."
 	;;
     restart)
