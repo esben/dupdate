@@ -162,7 +162,7 @@ process_zip_archive(const char *name)
 		goto out;
 	}
 
-	snprintf(shcmd, shcmd_len, "unzip -q %s/%s %s",
+	snprintf(shcmd, shcmd_len, "unzip -q \"%s/%s\" %s",
 		 cfg.watchdir, name, cfg.zipcmd);
 	INFO("running: %s", shcmd);
 	err = system(shcmd);
@@ -217,7 +217,7 @@ process_tar_archive(const char *name)
 		goto out;
 	}
 
-	snprintf(shcmd, shcmd_len, "tar -xf %s/%s", cfg.watchdir, name);
+	snprintf(shcmd, shcmd_len, "tar -xf \"%s/%s\"", cfg.watchdir, name);
 	INFO("running: %s", shcmd);
 	err = system(shcmd);
 	if (err == -1) {
