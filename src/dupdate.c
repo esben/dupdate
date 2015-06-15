@@ -204,13 +204,15 @@ process_tar_archive(const char *name)
 	int err;
 	char *tmpdir;
 
+	INFO("processing tar archive in %s", tmpdir);
+
 	tmpdir = new_tmpdir();
 	if (!tmpdir) {
 		ERROR("tmpdir creation failed");
-		return 1;
+		err = 1;
+		goto err_early;
 	}
 
-	INFO("processing tar archive in %s", tmpdir);
 	err = chdir(tmpdir);
 	if (err == -1) {
 		PERROR("chdir", errno);
@@ -250,6 +252,8 @@ process_tar_archive(const char *name)
 out:
 	destroy_tmpdir(tmpdir);
 	free(tmpdir);
+err_early:
+	remove_archive(name);
 	return err ? 1 : 0;
 }
 
