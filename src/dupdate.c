@@ -202,9 +202,20 @@ static int
 process_tar_archive(const char *name)
 {
 	int err;
-	char *tmpdir;
+	char *tmpdir, *completion_file;
 
 	INFO("processing tar archive in %s", tmpdir);
+
+	if (cfg.flags & DUPDATE_FLAG_COMPLETION) {
+		/* Allocate room for string "name.success" and "name.fail" */
+		completion_file = malloc(strlen(name) + 9);
+
+		/* Cleanup existing completion files */
+		sprintf(completion_file, "%s.success", name);
+		unlink(completion_file);
+		sprintf(completion_file, "%s.fail", name);
+		unlink(completion_file);
+	}
 
 	tmpdir = new_tmpdir();
 	if (!tmpdir) {
@@ -254,6 +265,15 @@ out:
 	free(tmpdir);
 err_early:
 	remove_archive(name);
+	if (cfg.flags & DUPDATE_FLAG_COMPLETION) {
+		if (err)
+			sprintf(completion_file, "%s.fail", name);
+		else
+			sprintf(completion_file, "%s.success", name);
+		open(completion_file, O_WRONLY|O_CREAT,
+		     S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH);
+		free(completion_file);
+	}
 	return err ? 1 : 0;
 }
 

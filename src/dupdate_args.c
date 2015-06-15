@@ -48,6 +48,7 @@ static const char *usage = \
 	"  -l, --syslog          Output syslog instead of stdout/stderr\n" \
 	"  -R, --no-remove       Don't remove archive after unpack\n"	\
 	"  -C, --no-cleanup      Don't remove unpacked files when done\n" \
+	"  -c, --completion      Create completion file when done\n"	\
 	"  --help                Display help\n"			\
 	;
 
@@ -61,10 +62,11 @@ static struct option longopts[] = {
 	{"syslog",	no_argument,		0, 'l'},
 	{"no-remove",	no_argument,		0, 'R'},
 	{"no-cleanup",	no_argument,		0, 'C'},
+	{"completion",	no_argument,		0, 'c'},
 	{"help",	no_argument,		0, 'h'},
 	{0, 0, 0, 0}
 };
-static const char *optstring = "u:x:z:p:fFlRCh";
+static const char *optstring = "u:x:z:p:fFlRCch";
 
 static void
 printf_usage(char *cmd)
@@ -147,6 +149,10 @@ parse_args(int argc, char *argv[])
 
 		case 'C':
 			cfg.flags |= DUPDATE_FLAG_NO_CLEANUP;
+			break;
+
+		case 'c':
+			cfg.flags |= DUPDATE_FLAG_COMPLETION;
 			break;
 
 		case 'h':
