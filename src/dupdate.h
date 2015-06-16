@@ -37,6 +37,7 @@ struct dupdate_config {
 #define DUPDATE_FLAG_SYSLOG		(1 << 2)
 #define DUPDATE_FLAG_NO_REMOVE		(1 << 3)
 #define DUPDATE_FLAG_NO_CLEANUP		(1 << 4)
+#define DUPDATE_FLAG_COMPLETION		(1 << 5)
 
 #define DEFAULT_PIDFILE			"/var/run/dupdate.pid"
 #define DEFAULT_CMDFILE			"run"
