@@ -202,28 +202,15 @@ static int
 process_tar_archive(const char *name)
 {
 	int err;
-	char *tmpdir, *completion_file;
-
-	INFO("processing tar archive in %s", tmpdir);
-
-	if (cfg.flags & DUPDATE_FLAG_COMPLETION) {
-		/* Allocate room for string "name.success" and "name.fail" */
-		completion_file = malloc(strlen(name) + 9);
-
-		/* Cleanup existing completion files */
-		sprintf(completion_file, "%s.success", name);
-		unlink(completion_file);
-		sprintf(completion_file, "%s.fail", name);
-		unlink(completion_file);
-	}
+	char *tmpdir;
 
 	tmpdir = new_tmpdir();
 	if (!tmpdir) {
 		ERROR("tmpdir creation failed");
-		err = 1;
-		goto err_early;
+		return 1;
 	}
 
+	INFO("processing tar archive in %s", tmpdir);
 	err = chdir(tmpdir);
 	if (err == -1) {
 		PERROR("chdir", errno);
@@ -263,8 +250,55 @@ process_tar_archive(const char *name)
 out:
 	destroy_tmpdir(tmpdir);
 	free(tmpdir);
-err_early:
-	remove_archive(name);
+	return err ? 1 : 0;
+}
+
+static int
+process_archive(const char *name)
+{
+	int fd, ret, err = 0;
+	char buf[4];
+	char *completion_file;
+
+	if (cfg.flags & DUPDATE_FLAG_COMPLETION) {
+		/* Allocate room for string "name.success" and "name.fail" */
+		completion_file = malloc(strlen(name) + 9);
+
+		/* Cleanup existing completion files */
+		sprintf(completion_file, "%s.success", name);
+		unlink(completion_file);
+		sprintf(completion_file, "%s.fail", name);
+		unlink(completion_file);
+	}
+
+	fd = open(name, O_RDONLY);
+	if (fd == -1) {
+		err = 1;
+		PERROR("open", errno);
+		goto out;
+	}
+
+	ret = read(fd, buf, sizeof(buf));
+	if (ret != sizeof(buf)) {
+		err = 1;
+		if (ret == -1)
+			PERROR("read", errno);
+		else
+			ERROR("partial archive head read: %d", ret);
+		if (close(fd) == -1)
+			PERROR("close", errno);
+		goto out;
+	}
+
+	if (close(fd) == -1)
+		PERROR("close", errno);
+
+	if (buf[0]==0x50 && buf[1]==0x4b && buf[2]==0x03 && buf[3]==0x04)
+		err = process_zip_archive(name);
+	else
+		err = process_tar_archive(name);
+
+out:
 	if (cfg.flags & DUPDATE_FLAG_COMPLETION) {
 		if (err)
 			sprintf(completion_file, "%s.fail", name);
@@ -274,39 +308,8 @@ err_early:
 		     S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH);
 		free(completion_file);
 	}
-	return err ? 1 : 0;
-}
 
-static int
-process_archive(const char *name)
-{
-	int fd, ret;
-	char buf[4];
-
-	fd = open(name, O_RDONLY);
-	if (fd == -1) {
-		PERROR("open", errno);
-		return 1;
-	}
-
-	ret = read(fd, buf, sizeof(buf));
-	if (ret != sizeof(buf)) {
-		if (ret == -1)
-			PERROR("read", errno);
-		else
-			ERROR("partial archive head read: %d", ret);
-		if (close(fd) == -1)
-			PERROR("close", errno);
-		return 1;
-	}
-
-	if (close(fd) == -1)
-		PERROR("close", errno);
-
-	if (buf[0]==0x50 && buf[1]==0x4b && buf[2]==0x03 && buf[3]==0x04)
-		return process_zip_archive(name);
-	else
-		return process_tar_archive(name);
+	return err;
 }
 
 static int
