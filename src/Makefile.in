@@ -53,8 +53,8 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 sbin_PROGRAMS = dupdate$(EXEEXT)
-@DAEMON_TRUE@am__append_1 = dupdate_daemon.c
-bin_PROGRAMS = simple_cmp$(EXEEXT)
+bin_PROGRAMS = inotifyd$(EXEEXT) simple_cmp$(EXEEXT)
+@DAEMON_TRUE@am__append_1 = daemon.c
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -67,12 +67,15 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(sbindir)"
 PROGRAMS = $(bin_PROGRAMS) $(sbin_PROGRAMS)
-am__dupdate_SOURCES_DIST = dupdate.c dupdate_args.c dupdate_daemon.c
-@DAEMON_TRUE@am__objects_1 = dupdate_daemon.$(OBJEXT)
-am_dupdate_OBJECTS = dupdate.$(OBJEXT) dupdate_args.$(OBJEXT) \
-	$(am__objects_1)
+am_dupdate_OBJECTS = dupdate.$(OBJEXT) common.$(OBJEXT)
 dupdate_OBJECTS = $(am_dupdate_OBJECTS)
 dupdate_LDADD = $(LDADD)
+am__inotifyd_SOURCES_DIST = inotifyd.c common.c daemon.c
+@DAEMON_TRUE@am__objects_1 = daemon.$(OBJEXT)
+am_inotifyd_OBJECTS = inotifyd.$(OBJEXT) common.$(OBJEXT) \
+	$(am__objects_1)
+inotifyd_OBJECTS = $(am_inotifyd_OBJECTS)
+inotifyd_LDADD = $(LDADD)
 am_simple_cmp_OBJECTS = simple_cmp.$(OBJEXT)
 simple_cmp_OBJECTS = $(am_simple_cmp_OBJECTS)
 simple_cmp_LDADD = $(LDADD)
@@ -84,8 +87,9 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(dupdate_SOURCES) $(simple_cmp_SOURCES)
-DIST_SOURCES = $(am__dupdate_SOURCES_DIST) $(simple_cmp_SOURCES)
+SOURCES = $(dupdate_SOURCES) $(inotifyd_SOURCES) $(simple_cmp_SOURCES)
+DIST_SOURCES = $(dupdate_SOURCES) $(am__inotifyd_SOURCES_DIST) \
+	$(simple_cmp_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -192,7 +196,8 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-dupdate_SOURCES = dupdate.c dupdate_args.c $(am__append_1)
+dupdate_SOURCES = dupdate.c common.c
+inotifyd_SOURCES = inotifyd.c common.c $(am__append_1)
 simple_cmp_SOURCES = simple_cmp.c
 all: all-am
 
@@ -311,6 +316,9 @@ clean-sbinPROGRAMS:
 dupdate$(EXEEXT): $(dupdate_OBJECTS) $(dupdate_DEPENDENCIES) $(EXTRA_dupdate_DEPENDENCIES) 
 	@rm -f dupdate$(EXEEXT)
 	$(LINK) $(dupdate_OBJECTS) $(dupdate_LDADD) $(LIBS)
+inotifyd$(EXEEXT): $(inotifyd_OBJECTS) $(inotifyd_DEPENDENCIES) $(EXTRA_inotifyd_DEPENDENCIES) 
+	@rm -f inotifyd$(EXEEXT)
+	$(LINK) $(inotifyd_OBJECTS) $(inotifyd_LDADD) $(LIBS)
 simple_cmp$(EXEEXT): $(simple_cmp_OBJECTS) $(simple_cmp_DEPENDENCIES) $(EXTRA_simple_cmp_DEPENDENCIES) 
 	@rm -f simple_cmp$(EXEEXT)
 	$(LINK) $(simple_cmp_OBJECTS) $(simple_cmp_LDADD) $(LIBS)
@@ -321,9 +329,10 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/daemon.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dupdate.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dupdate_args.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dupdate_daemon.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/inotifyd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/simple_cmp.Po@am__quote@
 
 .c.o:

@@ -1,5 +1,6 @@
 /*
  * Copyright 2010-2013 Prevas A/S.
+ * Copyright 2015 DEIF A/S.
  *
  * This file is part of dupdate.
  *
@@ -17,15 +18,17 @@
  * with dupdate.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "dupdate.h"
+#include "config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <unistd.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "common.h"
 
 static void
 write_pidfile(const char *path)
@@ -43,14 +46,14 @@ write_pidfile(const char *path)
 
 	n = snprintf(buf, 8, "%d\n", getpid());
 
-	if (write(pid_fd, buf, n) == -1)
+	if (write(pid_fd, buf, n) == -1) {
 		PERROR("write", errno);
+	}
 
 	close(pid_fd);
 }
 
-void
-daemonize(void)
+void daemonize(const char *pidfile)
 {
 	pid_t pid, sid;
 
@@ -71,8 +74,7 @@ daemonize(void)
 	}
 
 	/* At this point we are executing as the child process */
-
-	write_pidfile(cfg.pidfile);
+	write_pidfile(pidfile);
 
 	/* Change the file mode mask */
 	umask(0);
@@ -92,10 +94,13 @@ daemonize(void)
 	}
 
 	/* Redirect standard files to /dev/null */
-	if (freopen( "/dev/null", "r", stdin) == NULL)
+	if (freopen( "/dev/null", "r", stdin) == NULL) {
 		PERROR("freopen: stdin", errno);
-	if (freopen( "/dev/null", "w", stdout) == NULL)
+	}
+	if (freopen( "/dev/null", "w", stdout) == NULL) {
 		PERROR("freopen: stdout", errno);
-	if (freopen( "/dev/null", "w", stderr) == NULL)
+	}
+	if (freopen( "/dev/null", "w", stderr) == NULL) {
 		PERROR("freopen: stderr", errno);
+	}
 }

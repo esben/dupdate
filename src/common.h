@@ -1,5 +1,6 @@
 /*
  * Copyright 2010-2013 Prevas A/S.
+ * Copyright 2015 DEIF A/S.
  *
  * This file is part of dupdate.
  *
@@ -17,54 +18,42 @@
  * with dupdate.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _COMMON_H_
+#define _COMMON_H_
+
 #include <stdio.h>
 #include <syslog.h>
 #include <string.h>
 
 #include "config.h"
 
-struct dupdate_config {
-	char *watchdir;		/* Directory to watch for incoming archives */
-	char *unpackdir;	/* Directory to unpack archvies to */
-	char *tarcmd;		/* Command to execute in tar archives */
-	char *zipcmd;		/* Command to execute in zip archives*/
-	char *pidfile;		/* PID file (daemon mode only) */
-	int flags;		/* Configuration flags */
-};
+int strset(char **ptr, const char *str, size_t maxlen);
 
-#define DUPDATE_FLAG_FOREGROUND		(1 << 0)
-#define DUPDATE_FLAG_DETACH		(1 << 1)
-#define DUPDATE_FLAG_SYSLOG		(1 << 2)
-#define DUPDATE_FLAG_NO_REMOVE		(1 << 3)
-#define DUPDATE_FLAG_NO_CLEANUP		(1 << 4)
-#define DUPDATE_FLAG_COMPLETION		(1 << 5)
-
-#define DEFAULT_PIDFILE			"/var/run/dupdate.pid"
-#define DEFAULT_CMDFILE			"run"
-
-extern struct dupdate_config cfg;
+extern int _log_to_syslog;
+void log_to_syslog(int);
 
 #define INFO(format, args...)						\
-	if (cfg.flags & DUPDATE_FLAG_SYSLOG)				\
+	if (_log_to_syslog)						\
 		syslog(LOG_INFO, "" format "\n", ## args);		\
 	else								\
-		printf("" format "\n", ## args)
+		printf("" format "\n", ## args);
 
 #define ERROR(format, args...)						\
-	if (cfg.flags & DUPDATE_FLAG_SYSLOG)				\
+	if (_log_to_syslog)						\
 		syslog(LOG_ERR, "%s: " format "\n", __func__,		\
 		       ## args);					\
 	else								\
 		fprintf(stderr, "%s: " format "\n", __func__,		\
-			## args)
+			## args);
 
 #define PERROR(str, errnum)						\
-	if (cfg.flags & DUPDATE_FLAG_SYSLOG)				\
+	if (_log_to_syslog)						\
 		syslog(LOG_ERR, "%s: %s: %s\n", __func__, str,		\
 		       strerror(errnum));				\
 	else								\
 		fprintf(stderr, "%s: %s: %s\n", __func__, str,		\
-			strerror(errnum))
+			strerror(errnum));
 
-void parse_args(int argc, char *argv[]);
-void daemonize(void);
+int run_shcmd(const char *cmd);
+
+#endif /* _COMMON_H_ */

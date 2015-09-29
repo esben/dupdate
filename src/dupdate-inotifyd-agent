@@ -1,0 +1,61 @@
+#!/bin/sh
+# -*- mode: sh;-*-
+#
+# Copyright 2015 DEIF A/S.
+#
+# This file is part of dupdate.
+#
+# dupdate is free software: you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# dupdate is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along
+# with dupdate.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+set -o errexit -o pipefail
+
+# Configuration settings:
+DUPDATE=dupdate
+WORKDIR=/tmp/dupdate-XXXXXX
+TARCMD=run_update.sh
+ZIPCMD=run_update.sh
+SYSLOG=0
+REMOVE_IMAGE=1
+CLEANUP_WORKDIR=1
+COMPLETION=0
+
+events="$1"
+file="$2"
+subfile="$3"
+
+# Filter out all events except for:
+#   w   File opened for writing was closed
+#   y   File was moved into watched directory
+case "$events" in
+    *w*|*y*)	;;
+    *)		exit 0 ;;
+esac
+
+# Only process .dupdate files
+case "$subfile" in
+    *.dupdate)	;;
+    *)		exit 0 ;;
+esac
+
+cmd=$DUPDATE
+[ -n "$WORKDIR" ]		&& cmd="$cmd -d $WORKDIR"
+[ -n "$TARCMD" ]		&& cmd="$cmd -x $TARCMD"
+[ -n "$ZIPCMD" ]		&& cmd="$cmd -z $ZIPCMD"
+[ "$SYSLOG" != 0 ]		&& cmd="$cmd -l"
+[ "$REMOVE_IMAGE" == 0 ]	&& cmd="$cmd -R"
+[ "$CLEANUP_WORKDIR" == 0 ]	&& cmd="$cmd -C"
+
+echo "+" $cmd $file/$subfile
+exec $cmd $file/$subfile

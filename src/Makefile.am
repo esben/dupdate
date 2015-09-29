@@ -1,8 +1,11 @@
-sbin_PROGRAMS = dupdate
-dupdate_SOURCES = dupdate.c dupdate_args.c
+bin_PROGRAMS = dupdate inotifyd simple_cmp
+bin_SCRIPTS = dupdate-inotifyd-agent
+
+dupdate_SOURCES = dupdate.c common.c
+
+inotifyd_SOURCES = inotifyd.c common.c
 if DAEMON
-dupdate_SOURCES += dupdate_daemon.c
+inotifyd_SOURCES += daemon.c
 endif
 
-bin_PROGRAMS = simple_cmp
 simple_cmp_SOURCES = simple_cmp.c

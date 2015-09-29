@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 	} else if (len != ret) {
 		fprintf(stderr, "Error reading %lu bytes from %s\n",len,argv[1]);
 		return 1;
-	}		
+	}
 
 	ret = read(fd2, buf2, len);
 	if (ret < 0) {
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 	} else if (len != ret) {
 		fprintf(stderr, "Error reading %lu bytes from %s\n",len,argv[2]);
 		return 1;
-	}		
+	}
 
 	for (i=0;i<len;i++)
 		if (buf1[i] != buf2[i]) {
