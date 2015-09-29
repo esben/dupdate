@@ -57,5 +57,5 @@ cmd=$DUPDATE
 [ "$REMOVE_IMAGE" == 0 ]	&& cmd="$cmd -R"
 [ "$CLEANUP_WORKDIR" == 0 ]	&& cmd="$cmd -C"
 
-echo "+" $cmd $file/$subfile
-exec $cmd $file/$subfile
+echo "+" $cmd "$file/$subfile"
+exec $cmd "$file/$subfile"

@@ -134,7 +134,7 @@ static int process_zip_image(void)
 	int err;
 	char *image_fullpath = NULL;
 
-	snprintf(shcmd, shcmd_len, "unzip -q -d \"%s\" \"%s\" %s",
+	snprintf(shcmd, shcmd_len, "unzip -q -d \"%s\" \"%s\" \"%s\"",
 		 workdir, image, args.zipcmd);
 	if ((err = run_shcmd(shcmd))) {
 		PERROR(shcmd, err);
@@ -162,7 +162,8 @@ static int process_zip_image(void)
 		goto out;
 	}
 
-	snprintf(shcmd, shcmd_len, "./%s %s", args.zipcmd, image_fullpath);
+	snprintf(shcmd, shcmd_len, "\"./%s\" \"%s\"",
+		 args.zipcmd, image_fullpath);
 	if ((err = run_shcmd(shcmd))) {
 		PERROR(shcmd, err);
 		goto out;
@@ -198,7 +199,7 @@ static int process_tar_image(void)
 		goto out;
 	}
 
-	snprintf(shcmd, shcmd_len, "./%s", args.tarcmd);
+	snprintf(shcmd, shcmd_len, "\"./%s\"", args.tarcmd);
 	if ((err = run_shcmd(shcmd))) {
 		PERROR(shcmd, err);
 		goto out;

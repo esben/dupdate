@@ -216,10 +216,10 @@ static int inotifyd_event_loop(struct inotifyd_args *args,
 				watch = args->watch[i].path;
 
 		if (event->len)
-			snprintf(shcmd, shcmd_len, "%s %s %s %s",
+			snprintf(shcmd, shcmd_len, "\"%s\" %s \"%s\" \"%s\"",
 				 args->prog, events, watch, event->name);
 		else
-			snprintf(shcmd, shcmd_len, "%s %s %s",
+			snprintf(shcmd, shcmd_len, "\"%s\" %s \"%s\"",
 				 args->prog, events, watch);
 		if ((err = run_shcmd(shcmd))) {
 			PERROR(args->prog, err);
