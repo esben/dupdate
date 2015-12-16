@@ -19,6 +19,20 @@
 # with dupdate.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+#
+# This a userspace agent script for use with inotifyd, and will be called when
+# certain changes to a filesystem directory is noticed by inotifyd.
+#
+# The calling convention is as given by inotifyd:
+#  $1 - actual event(s)
+#  $2 - file (or directory) name
+#  $3 - name of subfile (if any), in case of watching a directory
+#
+# When a 'w' (file opened for writing was closed) or 'y' (file was moved into
+# watched directory) event is received for a file with .dupdate file
+# extension, dupdate is called with the path of the file as argument.
+#
+
 set -o errexit -o pipefail
 
 # Configuration settings:
