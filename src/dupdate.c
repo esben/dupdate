@@ -281,6 +281,15 @@ static int guess_image_type(void)
 	if (buf[0]==0x50 && buf[1]==0x4b && buf[2]==0x03 && buf[3]==0x04)
 		image_type = DUPDATE_IMAGE_TYPE_ZIP;
 	else
+		/* Tar-balls does not have a single header to look for.
+		 * Compressed tarballs are simply compressed files, which
+		 * happens to be a tar file, so you will fx. not be able to
+		 * differentiate between a tar.gz and any other gzip
+		 * compressed file without actually decompressing the file,
+		 * and looking of the header of the decompressed file.
+		 *
+		 * So we simply assume that anything that is not a zip file is
+		 * a tar-ball, and let the tar command (try to) handle it. */
 		image_type = DUPDATE_IMAGE_TYPE_TAR;
 
 	return 0;
