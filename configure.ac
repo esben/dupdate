@@ -17,7 +17,7 @@
 # along with dupdate.  If not, see <http://www.gnu.org/licenses/>.
 
 AC_PREREQ([2.64])
-AC_INIT([dupdate], esyscmd([./version.sh]), [esben.haabendal@prevas.dk])
+AC_INIT([dupdate], esyscmd([./version.sh]), [eha@deif.com])
 AC_CONFIG_SRCDIR([src/])
 AC_CONFIG_HEADERS([config.h])
 AC_CANONICAL_SYSTEM
